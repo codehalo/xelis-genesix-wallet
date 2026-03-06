@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
-import 'package:genesix/features/wallet/application/xswd_providers.dart';
+import 'package:genesix/features/wallet/application/xswd_controller_provider.dart';
+import 'package:genesix/features/wallet/application/xswd_state_providers.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/dialog_style.dart';
@@ -78,21 +78,15 @@ class _XswdAppDetailState extends ConsumerState<XswdAppDetail> {
     String permissionName,
     PermissionPolicy newPolicy,
   ) async {
-    final walletState = ref.read(walletStateProvider);
-    if (walletState.nativeWalletRepository == null) return;
-
     try {
       final updatedPermissions = Map<String, PermissionPolicy>.from(
         app.permissions,
       );
       updatedPermissions[permissionName] = newPolicy;
 
-      await walletState.nativeWalletRepository!.modifyXSWDAppPermissions(
-        app.id,
-        updatedPermissions,
-      );
-
-      ref.invalidate(xswdApplicationsProvider);
+      await ref
+          .read(xswdControllerProvider)
+          .editXswdAppPermission(app.id, updatedPermissions);
     } catch (_) {
       // Keep previous behavior: fail silently for now.
     }

@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/xswd_providers.dart';
+import 'package:genesix/features/wallet/application/xswd_state_providers.dart';
 import 'package:genesix/src/generated/l10n/app_localizations.dart';
 import 'package:genesix/features/wallet/domain/prefetch_permissions_rpc_request.dart';
 import 'package:genesix/features/wallet/domain/permission_rpc_request.dart';
 import 'package:genesix/features/wallet/domain/xswd_request_state.dart';
+import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/features/wallet/presentation/xswd/components/burn_builder_widget.dart';
 import 'package:genesix/features/wallet/presentation/xswd/components/deploy_contract_builder_widget.dart';
 import 'package:genesix/features/wallet/presentation/xswd/components/invoke_contract_widget.dart';
@@ -57,6 +58,7 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
 
   bool _timerShouldRun = false;
   bool _rememberDecision = false;
+  bool _detailsExpanded = false;
 
   late final XswdRequest _xswdRequestNotifier;
 
@@ -234,6 +236,7 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
     if (xswdState.xswdEventSummary == null) {
       _cancelRapidFireWait();
       _syncTimerWithState(_ActionSet.okOnly);
+      _detailsExpanded = false;
 
       return FDialog(
         animation: widget.animation,
@@ -271,6 +274,7 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
       _closeDelayTimer = null;
       _awaitingNextRequest = false;
       _awaitingRequestHash = null;
+      _detailsExpanded = false;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _setSuppress(false);
@@ -392,11 +396,17 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
                           ),
                           const SizedBox(height: Spaces.medium),
                           _XswdMoreDetailsAccordion(
+                            expanded: _detailsExpanded,
                             appInfo: summary.applicationInfo,
                             permissionRequest: xswdState.permissionRpcRequest,
                             prefetchRequest:
                                 xswdState.prefetchPermissionsRequest,
                             loc: loc,
+                            onExpandedChange: (expanded) {
+                              setState(() {
+                                _detailsExpanded = expanded;
+                              });
+                            },
                             onAssetTap: (asset) =>
                                 _showAssetDetails(context, loc, asset),
                           ),
@@ -472,6 +482,8 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
     _stopTimer();
 
     final xswdState = ref.read(xswdRequestProvider);
+    _showAcceptedConnectionToast(xswdState, decision);
+
     final decisionCompleter = xswdState.decision;
     if (decisionCompleter != null && !decisionCompleter.isCompleted) {
       decisionCompleter.complete(decision);
@@ -484,6 +496,30 @@ class _XswdDialogState extends ConsumerState<XswdDialog> {
     }
 
     context.pop();
+  }
+
+  void _showAcceptedConnectionToast(
+    XswdRequestState xswdState,
+    UserPermissionDecision decision,
+  ) {
+    final summary = xswdState.xswdEventSummary;
+    if (summary == null || !summary.isApplicationRequest()) {
+      return;
+    }
+
+    final accepted =
+        decision == UserPermissionDecision.accept ||
+        decision == UserPermissionDecision.alwaysAccept;
+    if (!accepted) {
+      return;
+    }
+
+    final loc = ref.read(appLocalizationsProvider);
+    ref
+        .read(toastProvider.notifier)
+        .showInformation(
+          title: '${loc.connected}: "${summary.applicationInfo.name}"',
+        );
   }
 }
 
@@ -565,17 +601,21 @@ class _XswdApplicationInfoSection extends StatelessWidget {
 
 class _XswdMoreDetailsAccordion extends StatelessWidget {
   const _XswdMoreDetailsAccordion({
+    required this.expanded,
     required this.appInfo,
     required this.permissionRequest,
     required this.prefetchRequest,
     required this.loc,
+    required this.onExpandedChange,
     required this.onAssetTap,
   });
 
+  final bool expanded;
   final AppInfo appInfo;
   final PermissionRpcRequest? permissionRequest;
   final PrefetchPermissionsRequest? prefetchRequest;
   final AppLocalizations loc;
+  final ValueChanged<bool> onExpandedChange;
   final ValueChanged<String> onAssetTap;
 
   @override
@@ -593,6 +633,14 @@ class _XswdMoreDetailsAccordion extends StatelessWidget {
     }
 
     return FAccordion(
+      control: FAccordionControl.lifted(
+        expanded: (index) => index == 0 && expanded,
+        onChange: (index, nextExpanded) {
+          if (index == 0) {
+            onExpandedChange(nextExpanded);
+          }
+        },
+      ),
       children: [
         FAccordionItem(
           title: const Text('More details'),

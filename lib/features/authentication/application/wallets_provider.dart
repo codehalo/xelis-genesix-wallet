@@ -1,17 +1,19 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genesix/features/authentication/domain/wallets_state.dart';
+import 'package:genesix/features/authentication/application/wallet_session_commands_provider.dart';
+import 'package:genesix/features/authentication/application/wallet_session_providers.dart';
+import 'package:genesix/features/authentication/domain/wallet_session.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:genesix/src/generated/rust_bridge/api/models/network.dart';
-import 'package:genesix/features/authentication/application/authentication_service.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/shared/utils/utils.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:genesix/src/generated/rust_bridge/api/models/network.dart';
 
-part 'wallets_state_provider.g.dart';
+part 'wallets_provider.g.dart';
 
 @riverpod
 class Wallets extends _$Wallets {
@@ -114,6 +116,7 @@ class Wallets extends _$Wallets {
     final walletPath = p.join(walletsPath, name);
     final newWalletPath = p.join(walletsPath, newName);
     final loc = ref.read(appLocalizationsProvider);
+    final activeSession = ref.read(activeWalletSessionProvider);
 
     if (kIsWeb) {
       final newPath = localStorage.getItem(newWalletPath);
@@ -128,13 +131,10 @@ class Wallets extends _$Wallets {
       }
     }
 
-    if (Platform.isWindows) {
-      // On Windows, we need to logout before renaming the wallet
-      // because the wallet file is locked by the process.
-      // Otherwise, we get an "Access is denied" error.
-      // TODO: test for web
-      final auth = ref.read(authenticationProvider.notifier);
-      await auth.logout();
+    if (!kIsWeb && Platform.isWindows) {
+      if (activeSession?.name == name) {
+        await ref.read(walletSessionCommandsProvider.notifier).logout();
+      }
     }
 
     if (kIsWeb) {
@@ -155,6 +155,18 @@ class Wallets extends _$Wallets {
         settingsNotifier.setLastDevnetWalletUsed(newName);
       case Network.stagenet:
         settingsNotifier.setLastStagenetWalletUsed(newName);
+    }
+
+    final currentSession = ref.read(activeWalletSessionProvider);
+    if (currentSession?.name == name) {
+      ref
+          .read(activeWalletSessionProvider.notifier)
+          .setSession(
+            WalletSession(
+              name: newName,
+              repository: currentSession!.repository,
+            ),
+          );
     }
   }
 
@@ -178,8 +190,10 @@ class Wallets extends _$Wallets {
     final walletsPath = await _getWalletDirPath();
     final walletPath = p.join(walletsPath, name);
 
-    final auth = ref.read(authenticationProvider.notifier);
-    await auth.logout();
+    final activeSession = ref.read(activeWalletSessionProvider);
+    if (activeSession?.name == name) {
+      await ref.read(walletSessionCommandsProvider.notifier).logout();
+    }
 
     if (kIsWeb) {
       localStorage.removeItem(walletPath);

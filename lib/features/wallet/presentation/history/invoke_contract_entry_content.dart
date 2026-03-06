@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:genesix/features/authentication/application/wallet_session_providers.dart';
 import 'package:genesix/features/logger/logger.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/assets/asset_name_widget.dart';
 import 'package:genesix/shared/widgets/components/labeled_value.dart';
 import 'package:genesix/shared/theme/constants.dart';
@@ -40,9 +41,9 @@ class _InvokeContractEntryContentState
   }
 
   Future<void> _fetchData() async {
-    final walletState = ref.read(walletStateProvider);
+    final walletState = ref.read(walletRuntimeProvider);
     final knownAssets = walletState.knownAssets;
-    final repository = walletState.nativeWalletRepository;
+    final repository = ref.read(activeWalletRepositoryProvider);
 
     if (repository == null) {
       setState(() => _isLoading = false);
@@ -379,10 +380,10 @@ class _InvokeContractEntryContentState
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
     final knownAssets = ref.watch(
-      walletStateProvider.select((state) => state.knownAssets),
+      walletRuntimeProvider.select((state) => state.knownAssets),
     );
 
     // Merge known assets with fetched assets

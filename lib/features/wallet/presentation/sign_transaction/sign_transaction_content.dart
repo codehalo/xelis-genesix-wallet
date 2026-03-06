@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class SignTransactionContent extends ConsumerStatefulWidget {
   const SignTransactionContent({super.key});
@@ -119,7 +119,7 @@ class _SignTransactionContentState
     if (_formKey.currentState?.validate() ?? false) {
       final transactionHash = _transactionController.text.trim();
       final future = ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .signTransactionHash(transactionHash.trim());
       setState(() {
         transactionSignature = future;

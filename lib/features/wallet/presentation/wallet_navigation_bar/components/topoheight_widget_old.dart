@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/network_mismatch_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +15,7 @@ class TopoHeightWidget extends ConsumerWidget {
     final loc = ref.watch(appLocalizationsProvider);
     bool mismatch = ref.watch(networkMismatchProvider);
     final topoheight = ref.watch(
-      walletStateProvider.select((state) => state.topoheight),
+      walletRuntimeProvider.select((state) => state.topoheight),
     );
 
     var displayedTopoheight = NumberFormat().format(topoheight);
@@ -64,7 +64,7 @@ class TopoHeightWidget extends ConsumerWidget {
                                 : () async {
                                     isRescanningNotifier.value = true;
                                     await ref
-                                        .read(walletStateProvider.notifier)
+                                        .read(walletRuntimeProvider.notifier)
                                         .rescan();
                                     isRescanningNotifier.value = false;
                                   },

@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesix/shared/theme/dialog_style.dart';
 import 'package:genesix/shared/theme/text_field_style.dart';
+import 'package:genesix/shared/theme/toaster_style.dart';
 
 // ignore_for_file: avoid_redundant_argument_values
 
@@ -50,6 +51,11 @@ FThemeData get greenLight {
       colors: colors,
       typography: typography,
     ),
+    toasterStyle: toasterStyle(
+      colors: colors,
+      typography: typography,
+      style: style,
+    ),
     textFieldStyle: textFieldStyle(
       colors: colors,
       typography: typography,
@@ -92,6 +98,11 @@ FThemeData get greenDark {
       style: style,
       colors: colors,
       typography: typography,
+    ),
+    toasterStyle: toasterStyle(
+      colors: colors,
+      typography: typography,
+      style: style,
     ),
     textFieldStyle: textFieldStyle(
       colors: colors,

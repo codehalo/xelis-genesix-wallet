@@ -7,7 +7,7 @@ import 'package:genesix/features/authentication/application/biometric_auth_provi
 import 'package:genesix/features/logger/logger.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/multisig_pending_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/transaction_summary.dart';
 import 'package:genesix/features/wallet/presentation/address_book/address_widget.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -20,6 +20,7 @@ import 'package:genesix/shared/widgets/components/warning_widget_old.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xelis_dart_sdk/xelis_dart_sdk.dart' as sdk;
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class SetupMultisigDialog extends ConsumerStatefulWidget {
   const SetupMultisigDialog({super.key});
@@ -56,7 +57,7 @@ class _SetupMultisigDialogState extends ConsumerState<SetupMultisigDialog> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
     bool transactionReadyToBroadcast = _transactionSummary != null;
     return GenericDialog(
@@ -497,7 +498,7 @@ class _SetupMultisigDialogState extends ConsumerState<SetupMultisigDialog> {
               (value) {
                 if (value != null &&
                     !ref
-                        .read(walletStateProvider.notifier)
+                        .read(walletCommandsProvider)
                         .isAddressValidForMultisig(value.trim())) {
                   return loc.multisig_address_validation_error;
                 }
@@ -582,7 +583,7 @@ class _SetupMultisigDialogState extends ConsumerState<SetupMultisigDialog> {
       context.loaderOverlay.show();
 
       final transactionSummary = await ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .setupMultisig(participants: participants, threshold: threshold);
 
       if (transactionSummary != null) {
@@ -607,7 +608,7 @@ class _SetupMultisigDialogState extends ConsumerState<SetupMultisigDialog> {
       ref.context.loaderOverlay.show();
 
       await ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .broadcastTx(hash: _transactionSummary!.hash);
 
       setState(() {

@@ -5,7 +5,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/transaction_summary.dart';
 import 'package:genesix/features/wallet/presentation/address_book/select_address_dialog_old.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/asset_dropdown_menu_item_old.dart';
@@ -22,6 +22,7 @@ import 'package:genesix/shared/widgets/components/generic_app_bar_widget_old.dar
 import 'package:genesix/shared/widgets/components/generic_form_builder_dropdown_old.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xelis_dart_sdk/xelis_dart_sdk.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class TransferScreen extends ConsumerStatefulWidget {
   const TransferScreen({super.key, this.recipientAddress});
@@ -48,10 +49,10 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
     _focusNodeAmount = FocusNode();
     _focusNodeAddress = FocusNode();
     final Map<String, String> balances = ref.read(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.read(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     // Get first balance that has corresponding asset data
@@ -86,13 +87,13 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final Map<String, String> balances = ref.watch(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
 
     return CustomScaffold(
@@ -339,7 +340,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
       (TransactionSummary?, String?) record;
       if (amount.trim() == _selectedAssetBalance) {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .sendAll(
               destination: address.trim(),
               asset: asset,
@@ -347,7 +348,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
             );
       } else {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .send(
               amount: double.parse(amount),
               destination: address.trim(),
@@ -406,7 +407,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
       //     _transferFormKey.currentState?.fields['fee']?.value as double;
 
       ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .estimateFees(
             amount: double.parse(amount),
             destination: address.trim(),

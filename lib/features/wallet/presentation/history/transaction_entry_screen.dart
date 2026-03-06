@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/history/base_transaction_entry_card.dart';
 import 'package:genesix/features/wallet/presentation/history/burn_entry_content.dart';
 import 'package:genesix/features/wallet/presentation/history/deploy_contract_entry_content.dart';
@@ -52,7 +52,7 @@ class _TransactionEntryScreenState
     final loc = ref.watch(appLocalizationsProvider);
     final locale = ref.watch(settingsProvider.select((state) => state.locale));
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
 
     final transactionEntry =

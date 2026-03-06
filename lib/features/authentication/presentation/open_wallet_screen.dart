@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/authentication/application/biometric_auth_provider.dart';
 import 'package:genesix/features/authentication/application/secure_storage_provider.dart';
+import 'package:genesix/features/authentication/application/wallet_session_commands_provider.dart';
+import 'package:genesix/features/authentication/domain/wallet_session_command_result.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/features/settings/domain/settings_state.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -14,8 +16,7 @@ import 'package:genesix/src/generated/rust_bridge/api/models/network.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jovial_svg/jovial_svg.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:genesix/features/authentication/application/authentication_service.dart';
-import 'package:genesix/features/authentication/application/wallets_state_provider.dart';
+import 'package:genesix/features/authentication/application/wallets_provider.dart';
 import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
@@ -250,16 +251,20 @@ class _OpenWalletWidgetState extends ConsumerState<OpenWalletScreen>
       return false;
     }
 
-    await _openWallet(name, password);
-    return true;
+    return _openWallet(name, password);
   }
 
-  Future<void> _openWallet(String name, String password) async {
+  Future<bool> _openWallet(String name, String password) async {
     context.loaderOverlay.show();
     try {
-      await ref
-          .read(authenticationProvider.notifier)
+      final result = await ref
+          .read(walletSessionCommandsProvider.notifier)
           .openWallet(name, password);
+      if (result is WalletSessionCommandSuccess && mounted) {
+        context.go(AuthAppScreen.home.toPath, extra: result.seedToReveal);
+        return true;
+      }
+      return false;
     } finally {
       if (mounted && context.loaderOverlay.visible) {
         context.loaderOverlay.hide();

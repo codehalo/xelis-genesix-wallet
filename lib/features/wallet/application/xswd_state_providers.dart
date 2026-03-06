@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:genesix/features/authentication/application/wallet_session_providers.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 import 'package:genesix/features/wallet/domain/permission_rpc_request.dart';
 import 'package:genesix/features/wallet/domain/prefetch_permissions_rpc_request.dart';
 import 'package:genesix/features/wallet/domain/xswd_request_state.dart';
@@ -11,7 +11,7 @@ import 'package:genesix/src/generated/rust_bridge/api/models/xswd_dtos.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:genesix/features/logger/logger.dart';
 
-part 'xswd_providers.g.dart';
+part 'xswd_state_providers.g.dart';
 
 @riverpod
 class XswdDialogOpenSignal extends _$XswdDialogOpenSignal {
@@ -25,7 +25,7 @@ class XswdDialogOpenSignal extends _$XswdDialogOpenSignal {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class XswdRequest extends _$XswdRequest {
   @override
   XswdRequestState build() {
@@ -36,6 +36,8 @@ class XswdRequest extends _$XswdRequest {
     required XswdRequestSummary xswdEventSummary,
     required String message,
   }) {
+    _completePendingDecision();
+
     final decisionCompleter = Completer<UserPermissionDecision>();
 
     try {
@@ -93,9 +95,7 @@ class XswdRequest extends _$XswdRequest {
 
   Future<void> _terminateSession(String appId, Object error) async {
     try {
-      final nativeWallet = ref.read(
-        walletStateProvider.select((state) => state.nativeWalletRepository),
-      );
+      final nativeWallet = ref.read(activeWalletRepositoryProvider);
 
       if (nativeWallet != null) {
         await nativeWallet.removeXswdApp(appId);
@@ -122,34 +122,33 @@ class XswdRequest extends _$XswdRequest {
   }
 
   void clearRequest() {
-    // Complete any pending decision with reject
+    _completePendingDecision();
+    state.snackBarTimer?.cancel();
+    state = const XswdRequestState(message: '', snackBarVisible: false);
+  }
+
+  void _completePendingDecision() {
     final pendingDecision = state.decision;
     if (pendingDecision != null && !pendingDecision.isCompleted) {
       pendingDecision.complete(UserPermissionDecision.reject);
     }
-
-    // Cancel any snackbar timer
-    state.snackBarTimer?.cancel();
-
-    // Reset state to initial
-    state = const XswdRequestState(message: '', snackBarVisible: false);
   }
 }
 
 @riverpod
 Future<List<AppInfo>> xswdApplications(Ref ref) async {
-  final xswdRequest = ref.watch(xswdRequestProvider);
   final enableXswd = ref.watch(settingsProvider.select((s) => s.enableXswd));
-  final nativeWallet = ref.watch(
-    walletStateProvider.select((state) => state.nativeWalletRepository),
+  final nativeWallet = ref.watch(activeWalletRepositoryProvider);
+  if (nativeWallet == null || !enableXswd) {
+    return [];
+  }
+
+  final pendingDecision = ref.watch(
+    xswdRequestProvider.select((state) => state.decision),
   );
-
-  if (xswdRequest.decision != null) {
-    await xswdRequest.decision!.future;
+  if (pendingDecision != null && !pendingDecision.isCompleted) {
+    await pendingDecision.future;
   }
 
-  if (nativeWallet != null && enableXswd) {
-    return nativeWallet.getXswdState();
-  }
-  return [];
+  return nativeWallet.getXswdState();
 }

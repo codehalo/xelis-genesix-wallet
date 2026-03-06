@@ -1,13 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:genesix/features/authentication/application/authentication_service.dart';
 import 'package:genesix/features/authentication/application/biometric_auth_provider.dart';
+import 'package:genesix/features/authentication/application/wallet_session_commands_provider.dart';
 import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/features/settings/domain/settings_state.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 import 'package:genesix/features/wallet/presentation/home/receive_address_dialog.dart';
 import 'package:genesix/features/wallet/presentation/side_bar/side_bar_footer.dart';
 import 'package:genesix/shared/resources/app_resources.dart';
@@ -255,8 +254,7 @@ class _SideBarState extends ConsumerState<SideBar> {
               icon: const Icon(FIcons.logOut),
               label: Text(loc.logout),
               onPress: () {
-                ref.read(walletStateProvider.notifier).disconnect();
-                ref.read(authenticationProvider.notifier).logout();
+                ref.read(walletSessionCommandsProvider.notifier).logout();
               },
             ),
           ],

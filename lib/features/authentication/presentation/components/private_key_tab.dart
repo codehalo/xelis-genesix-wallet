@@ -1,10 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:genesix/features/authentication/application/authentication_service.dart';
+import 'package:genesix/features/authentication/application/wallet_session_commands_provider.dart';
+import 'package:genesix/features/authentication/domain/wallet_session_command_result.dart';
+import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/utils/utils.dart';
+import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:genesix/features/authentication/presentation/components/network_select_menu_tile.dart';
 
@@ -116,13 +119,17 @@ class _PrivateKeyTabState extends ConsumerState<PrivateKeyTab> {
     if (_formKey.currentState?.validate() ?? false) {
       context.loaderOverlay.show();
 
-      await ref
-          .read(authenticationProvider.notifier)
+      final result = await ref
+          .read(walletSessionCommandsProvider.notifier)
           .createWallet(
             _nameController.text.trim(),
             _passwordController.text.trim(),
             privateKey: _privateKeyController.text.trim(),
           );
+
+      if (result is WalletSessionCommandSuccess && mounted) {
+        context.go(AuthAppScreen.home.toPath, extra: result.seedToReveal);
+      }
 
       if (mounted && context.loaderOverlay.visible) {
         context.loaderOverlay.hide();

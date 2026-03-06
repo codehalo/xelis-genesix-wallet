@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/last_transactions_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/components/transaction_view_utils.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/utils/utils.dart';
@@ -26,10 +26,10 @@ class _LastTransactionsCardState extends ConsumerState<LastTransactionsCard> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final network = ref.watch(
-      walletStateProvider.select((value) => value.network),
+      walletRuntimeProvider.select((value) => value.network),
     );
     final knownAssets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     final lastTransactionsAsync = ref.watch(lastTransactionsProvider);

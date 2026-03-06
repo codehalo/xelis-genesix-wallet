@@ -2,9 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/authentication/application/biometric_auth_provider.dart';
-import 'package:genesix/features/authentication/application/wallets_state_provider.dart';
+import 'package:genesix/features/authentication/application/wallets_provider.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/side_bar/change_password_dialog.dart';
 import 'package:genesix/features/wallet/presentation/side_bar/wallet_name_widget.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -26,7 +26,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final walletAddress = ref.watch(
-      walletStateProvider.select((state) => state.address),
+      walletRuntimeProvider.select((state) => state.address),
     );
 
     return SheetContent(
@@ -99,7 +99,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               startWithBiometricAuth(
                 ref,
                 callback: (ref) {
-                  final walletSnapshot = ref.read(walletStateProvider);
+                  final walletSnapshot = ref.read(walletRuntimeProvider);
                   final wallets = ref.read(walletsProvider.notifier);
                   wallets
                       .deleteWallet(walletSnapshot.name)

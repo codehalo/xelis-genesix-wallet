@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/multisig_pending_state_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/address_book/address_widget.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/multisig/setup_multisig_dialog.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/multisig/sign_transaction_dialog.dart';
@@ -15,6 +15,7 @@ import 'package:genesix/shared/utils/utils.dart';
 import 'package:genesix/shared/widgets/components/custom_scaffold.dart';
 import 'package:genesix/shared/widgets/components/generic_app_bar_widget_old.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class MultisigScreen extends ConsumerStatefulWidget {
   const MultisigScreen({super.key});
@@ -28,7 +29,7 @@ class _MultisigScreenState extends ConsumerState<MultisigScreen> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final multisigState = ref.watch(
-      walletStateProvider.select((value) => value.multisigState),
+      walletRuntimeProvider.select((value) => value.multisigState),
     );
     final pendingState = ref.watch(multisigPendingStateProvider);
     return CustomScaffold(
@@ -244,7 +245,7 @@ class _MultisigScreenState extends ConsumerState<MultisigScreen> {
     context.loaderOverlay.show();
 
     final unsignedTx = await ref
-        .read(walletStateProvider.notifier)
+        .read(walletCommandsProvider)
         .startDeleteMultisig();
 
     if (mounted) {

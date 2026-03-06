@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:genesix/features/authentication/application/wallets_state_provider.dart';
+import 'package:genesix/features/authentication/application/wallets_provider.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/widgets/components/hashicon_widget.dart';
@@ -49,10 +49,10 @@ class _WalletNameWidgetState extends ConsumerState<WalletNameWidget> {
     final loc = ref.watch(appLocalizationsProvider);
     final wallets = ref.watch(walletsProvider.future);
     final walletName = ref.watch(
-      walletStateProvider.select((state) => state.name),
+      walletRuntimeProvider.select((state) => state.name),
     );
     final walletAddress = ref.watch(
-      walletStateProvider.select((state) => state.address),
+      walletRuntimeProvider.select((state) => state.address),
     );
 
     return Row(
@@ -154,7 +154,7 @@ class _WalletNameWidgetState extends ConsumerState<WalletNameWidget> {
     if (_formKey.currentState?.validate() ?? false) {
       try {
         final walletName = ref.read(
-          walletStateProvider.select((state) => state.name),
+          walletRuntimeProvider.select((state) => state.name),
         );
 
         if (newName == walletName) {

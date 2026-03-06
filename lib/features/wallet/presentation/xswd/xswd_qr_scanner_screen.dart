@@ -9,12 +9,12 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:genesix/features/logger/logger.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
-import 'package:genesix/features/wallet/application/xswd_providers.dart';
+import 'package:genesix/features/wallet/application/xswd_state_providers.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 
 import 'xswd_relayer.dart';
+import 'package:genesix/features/wallet/application/xswd_controller_provider.dart';
 
 class XswdQRScannerScreen extends ConsumerStatefulWidget {
   const XswdQRScannerScreen({super.key});
@@ -183,7 +183,7 @@ class _XswdQRScannerScreenState extends ConsumerState<XswdQRScannerScreen> {
 
       final relayerData = session.toApplicationDataRelayer();
 
-      await ref.read(walletStateProvider.notifier).addXswdRelayer(relayerData);
+      await ref.read(xswdControllerProvider).addXswdRelayer(relayerData);
 
       // Wait for all XSWD permission dialogs to fully complete.
       final waitDeadline = DateTime.now().add(const Duration(seconds: 12));

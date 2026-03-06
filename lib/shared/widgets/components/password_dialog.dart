@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:genesix/features/authentication/application/wallet_session_providers.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/utils/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 
 class PasswordDialog extends ConsumerStatefulWidget {
   final void Function(String password)? onEnter;
@@ -48,12 +48,17 @@ class _PasswordDialogState extends ConsumerState<PasswordDialog> {
   }
 
   void _checkWalletPassword(BuildContext context, String password) async {
-    final wallet = ref.read(walletStateProvider);
+    final wallet = ref.read(activeWalletRepositoryProvider);
+    final loc = ref.read(appLocalizationsProvider);
     try {
       context.loaderOverlay.show();
 
+      if (wallet == null) {
+        throw Exception(loc.oups);
+      }
+
       // check if password is valid
-      await wallet.nativeWalletRepository!.isValidPassword(password);
+      await wallet.isValidPassword(password);
 
       // call onValid callback
       widget.onValid!();

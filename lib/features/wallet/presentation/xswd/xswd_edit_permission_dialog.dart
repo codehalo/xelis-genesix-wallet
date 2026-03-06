@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
-import 'package:genesix/features/wallet/application/xswd_providers.dart';
+import 'package:genesix/features/wallet/application/xswd_state_providers.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
 import 'package:genesix/shared/utils/utils.dart';
@@ -10,6 +9,7 @@ import 'package:genesix/shared/widgets/components/generic_dialog_old.dart';
 import 'package:genesix/shared/widgets/components/generic_form_builder_dropdown_old.dart';
 import 'package:genesix/src/generated/rust_bridge/api/models/xswd_dtos.dart';
 import 'package:go_router/go_router.dart';
+import 'package:genesix/features/wallet/application/xswd_controller_provider.dart';
 
 class XswdEditPermissionDialog extends ConsumerStatefulWidget {
   const XswdEditPermissionDialog(this.appInfo, {super.key});
@@ -191,7 +191,7 @@ class _XswdEditPermissionDialogState
 
   void _onSave() {
     ref
-        .read(walletStateProvider.notifier)
+        .read(xswdControllerProvider)
         .editXswdAppPermission(widget.appInfo.id, _permissions);
     context.pop();
     ref.invalidate(xswdRequestProvider);

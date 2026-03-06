@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/transaction_summary.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/transaction_review_dialog_new.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -15,6 +15,7 @@ import 'package:genesix/shared/utils/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xelis_dart_sdk/xelis_dart_sdk.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 // import 'package:genesix/features/wallet/domain/transaction_review_state.dart';
 
 class BurnScreenNew extends ConsumerStatefulWidget {
@@ -39,10 +40,10 @@ class _BurnScreenNewState extends ConsumerState<BurnScreenNew>
     super.initState();
 
     final Map<String, String> balances = ref.read(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.read(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     final firstValidBalance = balances.entries
@@ -76,10 +77,10 @@ class _BurnScreenNewState extends ConsumerState<BurnScreenNew>
     final loc = ref.watch(appLocalizationsProvider);
 
     final Map<String, String> balances = ref.watch(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     final validAssets = balances.entries
@@ -286,12 +287,10 @@ class _BurnScreenNewState extends ConsumerState<BurnScreenNew>
 
     (TransactionSummary?, String?) record;
     if (amountText == _selectedAssetBalance) {
-      record = await ref
-          .read(walletStateProvider.notifier)
-          .burnAll(asset: asset);
+      record = await ref.read(walletCommandsProvider).burnAll(asset: asset);
     } else {
       record = await ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .burn(amount: double.parse(amountText), asset: asset);
     }
 

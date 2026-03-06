@@ -2,12 +2,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 import 'package:genesix/features/wallet/domain/mnemonic_languages.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/utils/utils.dart';
 import 'package:genesix/shared/widgets/components/faded_scroll.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class RecoveryPhraseContent extends ConsumerStatefulWidget {
   const RecoveryPhraseContent({super.key});
@@ -25,18 +25,15 @@ class _RecoveryPhraseContentState extends ConsumerState<RecoveryPhraseContent> {
     super.initState();
     final loc = ref.read(appLocalizationsProvider);
 
-    ref
-        .read(walletStateProvider.notifier)
-        .getSeed(MnemonicLanguage.english)
-        .then(
-          (words) {
-            setState(() {
-              _seedWords = words;
-            });
-          },
-          onError: (_, _) =>
-              ref.read(toastProvider.notifier).showError(description: loc.oups),
-        );
+    ref.read(walletCommandsProvider).getSeed(MnemonicLanguage.english).then(
+      (words) {
+        setState(() {
+          _seedWords = words;
+        });
+      },
+      onError: (_, _) =>
+          ref.read(toastProvider.notifier).showError(description: loc.oups),
+    );
   }
 
   @override
@@ -101,7 +98,7 @@ class _RecoveryPhraseContentState extends ConsumerState<RecoveryPhraseContent> {
                           final selected = values.isEmpty ? null : values.first;
                           if (selected == null) return;
                           ref
-                              .read(walletStateProvider.notifier)
+                              .read(walletCommandsProvider)
                               .getSeed(selected)
                               .then(
                                 (words) {

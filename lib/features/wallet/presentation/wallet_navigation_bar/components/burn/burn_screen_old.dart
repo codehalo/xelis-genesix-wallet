@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/transaction_summary.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/transaction_dialog_old.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -14,6 +14,7 @@ import 'package:genesix/shared/widgets/components/faded_scroll.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xelis_dart_sdk/xelis_dart_sdk.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class BurnScreen extends ConsumerStatefulWidget {
   const BurnScreen({super.key});
@@ -39,7 +40,7 @@ class _BurnScreenState extends ConsumerState<BurnScreen>
     super.initState();
     _focusNodeAmount = FocusNode();
     final Map<String, String> balances = ref.read(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     if (balances.isEmpty) {
       _selectedAssetBalance = AppResources.zeroBalance;
@@ -61,10 +62,10 @@ class _BurnScreenState extends ConsumerState<BurnScreen>
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final Map<String, String> balances = ref.watch(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     final validAssets = balances.entries
@@ -215,7 +216,7 @@ class _BurnScreenState extends ConsumerState<BurnScreen>
     if (selectedAsset != null) {
       _selectedAsset = selectedAsset.key;
       final Map<String, String> balances = ref.read(
-        walletStateProvider.select((value) => value.trackedBalances),
+        walletRuntimeProvider.select((value) => value.trackedBalances),
       );
       _selectedAssetBalance =
           balances[_selectedAsset] ?? AppResources.zeroBalance;
@@ -247,11 +248,11 @@ class _BurnScreenState extends ConsumerState<BurnScreen>
       (TransactionSummary?, String?) record;
       if (amount.trim() == _selectedAssetBalance) {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .burnAll(asset: _selectedAsset!);
       } else {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .burn(amount: double.parse(amount), asset: _selectedAsset!);
       }
 

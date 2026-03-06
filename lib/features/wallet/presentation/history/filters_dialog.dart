@@ -6,7 +6,7 @@ import 'package:genesix/features/settings/application/settings_state_provider.da
 import 'package:genesix/features/wallet/application/address_book_provider.dart';
 import 'package:genesix/features/wallet/application/history_providers.dart';
 import 'package:genesix/features/wallet/application/search_query_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/history_filter_state.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
@@ -56,7 +56,7 @@ class _FiltersDialogState extends ConsumerState<FiltersDialog>
     );
     _categoriesSelected = _getSelectedCategories(filterState);
 
-    final knownAssets = ref.read(walletStateProvider).knownAssets;
+    final knownAssets = ref.read(walletRuntimeProvider).knownAssets;
 
     MapEntry<String, AssetData>? initialAssetEntry;
     if (filterState.asset != null) {
@@ -102,10 +102,10 @@ class _FiltersDialogState extends ConsumerState<FiltersDialog>
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final balances = ref.watch(
-      walletStateProvider.select((state) => state.trackedBalances),
+      walletRuntimeProvider.select((state) => state.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     final trackedAssets = assets.entries

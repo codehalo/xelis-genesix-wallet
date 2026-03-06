@@ -6,7 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:genesix/features/logger/logger.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/address_book_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 import 'package:genesix/features/wallet/domain/history_filter_state.dart';
 import 'package:genesix/features/wallet/presentation/history/filters_dialog.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -61,7 +61,7 @@ class _ExportButtonState extends ConsumerState<ExportButton> {
     if (!mounted) return;
 
     final loc = ref.read(appLocalizationsProvider);
-    final walletNotifier = ref.read(walletStateProvider.notifier);
+    final walletCommands = ref.read(walletCommandsProvider);
     final toast = ref.read(toastProvider.notifier);
     toast.showEvent(description: 'Exporting wallet transactions...');
 
@@ -86,7 +86,7 @@ class _ExportButtonState extends ConsumerState<ExportButton> {
       );
 
       if (kIsWeb) {
-        final csv = await walletNotifier.exportCsvForWeb(historyPageFilter);
+        final csv = await walletCommands.exportCsvForWeb(historyPageFilter);
         if (csv != null) {
           saveTextFile(csv, 'genesix_transactions.csv');
           toast.showInformation(title: loc.csv_exported_successfully);
@@ -96,7 +96,7 @@ class _ExportButtonState extends ConsumerState<ExportButton> {
       } else {
         var path = await FilePicker.platform.getDirectoryPath();
         if (path != null) {
-          await walletNotifier.exportCsv(path, historyPageFilter);
+          await walletCommands.exportCsv(path, historyPageFilter);
           toast.showInformation(title: loc.csv_exported_successfully);
         }
       }

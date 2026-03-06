@@ -8,7 +8,7 @@ import 'package:genesix/features/logger/logger.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/multisig_pending_state_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/multisig/multisig_participant.dart';
 import 'package:genesix/features/wallet/domain/transaction_review_state.dart';
 import 'package:genesix/src/generated/rust_bridge/api/models/wallet_dtos.dart';
@@ -21,6 +21,7 @@ import 'package:genesix/shared/widgets/components/generic_dialog_old.dart';
 import 'package:genesix/shared/widgets/components/generic_form_builder_dropdown_old.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class TransactionDialog extends ConsumerStatefulWidget {
   const TransactionDialog({super.key});
@@ -38,7 +39,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final multisigState = ref.watch(
-      walletStateProvider.select((value) => value.multisigState),
+      walletRuntimeProvider.select((value) => value.multisigState),
     );
     final transactionReview = ref.watch(transactionReviewProvider);
 
@@ -272,7 +273,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
     if (_signaturesFormKey.currentState?.saveAndValidate() ?? false) {
       List<SignatureMultisig> signatures = List.generate(
-        ref.read(walletStateProvider).multisigState.threshold,
+        ref.read(walletRuntimeProvider).multisigState.threshold,
         (index) {
           final multisigParticipant =
               _signaturesFormKey.currentState?.fields['id_$index']?.value
@@ -288,7 +289,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       );
 
       final tx = await ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .finalizeMultisigTransaction(signatures: signatures);
 
       if (tx != null) {
@@ -324,9 +325,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
         case DeleteMultisigTransaction(:final txHash) ||
             SingleTransferTransaction(:final txHash) ||
             BurnTransaction(:final txHash):
-          await ref
-              .read(walletStateProvider.notifier)
-              .broadcastTx(hash: txHash);
+          await ref.read(walletCommandsProvider).broadcastTx(hash: txHash);
         default:
           throw Exception('TransactionReviewState not supported');
       }

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/side_bar/account_sheet.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
@@ -18,7 +18,7 @@ class SideBarFooter extends ConsumerStatefulWidget {
 class _SideBarFooterState extends ConsumerState<SideBarFooter> {
   @override
   Widget build(BuildContext context) {
-    final walletState = ref.watch(walletStateProvider);
+    final walletState = ref.watch(walletRuntimeProvider);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,

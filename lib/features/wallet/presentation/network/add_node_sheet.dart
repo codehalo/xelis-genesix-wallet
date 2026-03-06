@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/features/wallet/application/network_nodes_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/node_address.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/widgets/components/sheet_content.dart';
@@ -94,9 +96,7 @@ class _AddNodeSheetState extends ConsumerState<AddNodeSheet> {
     );
     final network = ref.read(settingsProvider).network;
     ref.read(networkNodesProvider.notifier).addNode(network, node);
-    // set the newly added network as the current network
-    ref.read(networkNodesProvider.notifier).setNodeAddress(network, node);
-    ref.read(walletStateProvider.notifier).reconnect(node);
+    unawaited(ref.read(walletRuntimeProvider.notifier).reconnect(node));
     context.pop();
   }
 }

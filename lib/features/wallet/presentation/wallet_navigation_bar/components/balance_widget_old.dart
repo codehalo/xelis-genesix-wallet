@@ -11,7 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
 
@@ -27,11 +27,11 @@ class BalanceWidget extends ConsumerWidget {
     final loc = ref.watch(appLocalizationsProvider);
     final settings = ref.watch(settingsProvider);
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
 
     final xelisBalance = ref.watch(
-      walletStateProvider.select((state) => state.xelisBalance),
+      walletRuntimeProvider.select((state) => state.xelisBalance),
     );
     var displayedBalance =
         '${xelisBalance.isNotEmpty ? xelisBalance : AppResources.zeroBalance} ${getXelisTicker(network)}';

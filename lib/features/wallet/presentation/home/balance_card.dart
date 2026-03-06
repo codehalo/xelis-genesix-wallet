@@ -5,7 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/presentation/home/receive_address_dialog.dart';
 import 'package:genesix/features/wallet/presentation/home/usd_balance_widget.dart';
 import 'package:genesix/shared/resources/app_resources.dart';
@@ -37,7 +37,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
   Widget build(BuildContext context) {
     final loc = ref.watch(appLocalizationsProvider);
     final settings = ref.watch(settingsProvider);
-    final walletState = ref.watch(walletStateProvider);
+    final walletState = ref.watch(walletRuntimeProvider);
 
     var displayedBalance = walletState.xelisBalance;
 

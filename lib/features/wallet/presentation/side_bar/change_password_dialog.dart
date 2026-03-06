@@ -2,11 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 
 class ChangePasswordDialog extends ConsumerStatefulWidget {
   const ChangePasswordDialog({super.key});
@@ -119,7 +119,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
         context.loaderOverlay.show();
 
         await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .changePassword(
               _currentPasswordController.text.trim(),
               _newPasswordController.text.trim(),

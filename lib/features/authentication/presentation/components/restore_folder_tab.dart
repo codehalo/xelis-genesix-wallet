@@ -4,7 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:genesix/features/authentication/application/authentication_service.dart';
+import 'package:genesix/features/authentication/application/wallet_session_commands_provider.dart';
+import 'package:genesix/features/authentication/domain/wallet_session_command_result.dart';
+import 'package:genesix/features/router/route_utils.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/shared/providers/toast_provider.dart';
@@ -143,13 +145,17 @@ class _RestoreFolderTabState extends ConsumerState<RestoreFolderTab> {
       if (!mounted) return;
       context.loaderOverlay.show();
 
-      await ref
-          .read(authenticationProvider.notifier)
+      final result = await ref
+          .read(walletSessionCommandsProvider.notifier)
           .openImportedWallet(
             _selectedWalletFolder!.path,
             _selectedWalletFolder!.walletName,
             password,
           );
+
+      if (result is WalletSessionCommandSuccess && mounted) {
+        context.go(AuthAppScreen.home.toPath, extra: result.seedToReveal);
+      }
 
       if (mounted && context.loaderOverlay.visible) {
         context.loaderOverlay.hide();

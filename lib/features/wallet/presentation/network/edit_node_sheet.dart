@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
 import 'package:genesix/features/wallet/application/network_nodes_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/node_address.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/widgets/components/sheet_content.dart';
@@ -126,9 +128,7 @@ class _EditNodeSheetState extends ConsumerState<EditNodeSheet> {
       ref
           .read(networkNodesProvider.notifier)
           .updateNode(network, widget.nodeAddress, newValue);
-      // Update the node address in the provider
-      ref.read(networkNodesProvider.notifier).setNodeAddress(network, newValue);
-      ref.read(walletStateProvider.notifier).reconnect(newValue);
+      unawaited(ref.read(walletRuntimeProvider.notifier).reconnect(newValue));
     }
   }
 
@@ -140,12 +140,14 @@ class _EditNodeSheetState extends ConsumerState<EditNodeSheet> {
       // assuming we want to reconnect to the first available node after deletion
       final nodes = ref.read(networkNodesProvider).getNodes(network);
       if (nodes.isNotEmpty) {
+        unawaited(
+          ref.read(walletRuntimeProvider.notifier).reconnect(nodes.first),
+        );
+      } else {
         ref
             .read(networkNodesProvider.notifier)
-            .setNodeAddress(network, nodes.first);
-        ref.read(walletStateProvider.notifier).reconnect(nodes.first);
-      } else {
-        ref.read(walletStateProvider.notifier).disconnect();
+            .setNodeAddress(network, const NodeAddress());
+        unawaited(ref.read(walletRuntimeProvider.notifier).disconnect());
       }
     }
   }

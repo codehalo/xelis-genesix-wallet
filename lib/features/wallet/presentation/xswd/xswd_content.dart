@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:genesix/features/authentication/application/wallet_session_providers.dart';
 import 'package:genesix/features/router/routes.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/settings/application/settings_state_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
-import 'package:genesix/features/wallet/application/xswd_providers.dart';
-import 'package:genesix/shared/providers/toast_provider.dart';
+import 'package:genesix/features/wallet/application/xswd_controller_provider.dart';
+import 'package:genesix/features/wallet/application/xswd_state_providers.dart';
 import 'package:genesix/shared/theme/build_context_extensions.dart';
 import 'package:genesix/shared/theme/constants.dart';
 import 'package:genesix/shared/theme/dialog_style.dart';
@@ -55,11 +55,10 @@ class _XSWDContentState extends ConsumerState<XSWDContent> {
   }
 
   Future<void> _checkXswdStatus() async {
-    final walletState = ref.read(walletStateProvider);
-    if (walletState.nativeWalletRepository != null) {
+    final repository = ref.read(activeWalletRepositoryProvider);
+    if (repository != null) {
       try {
-        final isRunning = await walletState.nativeWalletRepository!
-            .isXswdRunning();
+        final isRunning = await repository.isXswdRunning();
         if (mounted) {
           if (isRunning) {
             _xswdEnableRequestedAt = null;
@@ -381,41 +380,27 @@ class _XswdAppsListState extends ConsumerState<_XswdAppsList> {
 
   bool get _isDisconnecting => _disconnectingAppId != null;
 
-  Future<void> _handleAppDisconnection(String appId) async {
-    final walletState = ref.read(walletStateProvider);
-    if (walletState.nativeWalletRepository == null) {
-      ref
-          .read(toastProvider.notifier)
-          .showError(description: widget.loc.disconnecting_toast_error);
-      return;
-    }
-
+  Future<void> _handleAppDisconnection(AppInfo app) async {
     try {
-      await walletState.nativeWalletRepository!.removeXswdApp(appId);
-      ref.invalidate(xswdApplicationsProvider);
-      ref
-          .read(toastProvider.notifier)
-          .showInformation(title: widget.loc.app_disconnected.capitalize());
+      await ref.read(xswdControllerProvider).closeXswdAppConnection(app);
     } catch (_) {
-      ref
-          .read(toastProvider.notifier)
-          .showError(description: widget.loc.disconnecting_toast_error);
+      // Errors are surfaced through wallet effects.
     }
   }
 
-  Future<void> _openAppDetails(BuildContext context, String appId) async {
+  Future<void> _openAppDetails(BuildContext context, AppInfo app) async {
     if (_isDisconnecting) return;
 
     final hasDisconnected = await XswdAppDetailRoute(
-      $extra: appId,
+      $extra: app.id,
     ).push<bool>(context);
 
     if (hasDisconnected == true) {
       if (!mounted) return;
       setState(() {
-        _disconnectingAppId = appId;
+        _disconnectingAppId = app.id;
       });
-      await _handleAppDisconnection(appId);
+      await _handleAppDisconnection(app);
       if (mounted) {
         setState(() {
           _disconnectingAppId = null;
@@ -454,7 +439,7 @@ class _XswdAppsListState extends ConsumerState<_XswdAppsList> {
                   return FItem(
                     onPress: _isDisconnecting
                         ? null
-                        : () => _openAppDetails(context, app.id),
+                        : () => _openAppDetails(context, app),
                     prefix: Icon(
                       FIcons.cable,
                       size: 18,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:genesix/features/settings/application/app_localizations_provider.dart';
 import 'package:genesix/features/wallet/application/transaction_review_provider.dart';
-import 'package:genesix/features/wallet/application/wallet_provider.dart';
+import 'package:genesix/features/wallet/application/wallet_runtime_provider.dart';
 import 'package:genesix/features/wallet/domain/transaction_summary.dart';
 import 'package:genesix/features/wallet/presentation/wallet_navigation_bar/components/transaction_dialog_old.dart';
 import 'package:genesix/features/wallet/presentation/address_book/select_address_dialog.dart';
@@ -19,6 +19,7 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xelis_dart_sdk/xelis_dart_sdk.dart';
 import 'package:recase/recase.dart';
 import 'package:go_router/go_router.dart';
+import 'package:genesix/features/wallet/application/wallet_commands_provider.dart';
 // import 'package:genesix/features/wallet/domain/transaction_review_state.dart';
 
 class TransferScreenNew extends ConsumerStatefulWidget {
@@ -50,10 +51,10 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
     super.initState();
 
     final Map<String, String> balances = ref.read(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.read(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
 
     // Get first valid balance
@@ -100,13 +101,13 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
     final inputHeight = 40.0;
 
     final Map<String, String> balances = ref.watch(
-      walletStateProvider.select((value) => value.trackedBalances),
+      walletRuntimeProvider.select((value) => value.trackedBalances),
     );
     final Map<String, AssetData> assets = ref.watch(
-      walletStateProvider.select((value) => value.knownAssets),
+      walletRuntimeProvider.select((value) => value.knownAssets),
     );
     final network = ref.watch(
-      walletStateProvider.select((state) => state.network),
+      walletRuntimeProvider.select((state) => state.network),
     );
 
     final validAssets = balances.entries
@@ -472,7 +473,7 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
         _selectedAsset != null) {
       final amount = double.tryParse(_amountController.text);
       ref
-          .read(walletStateProvider.notifier)
+          .read(walletCommandsProvider)
           .estimateFees(
             amount: amount ?? 0.0,
             destination: address,
@@ -516,7 +517,7 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
   //
   //     if (transactionReview is SingleTransferTransaction) {
   //       await ref
-  //           .read(walletStateProvider.notifier)
+  //           .read(walletRuntimeProvider.notifier)
   //           .broadcastTx(hash: transactionReview.txHash);
   //
   //       ref.read(transactionReviewProvider.notifier).broadcast();
@@ -546,7 +547,7 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
     if (selectedAsset != null) {
       _selectedAsset = selectedAsset.key;
       final Map<String, String> balances = ref.read(
-        walletStateProvider.select((value) => value.trackedBalances),
+        walletRuntimeProvider.select((value) => value.trackedBalances),
       );
       _selectedAssetBalance =
           balances[_selectedAsset] ?? AppResources.zeroBalance;
@@ -578,11 +579,11 @@ class _TransferScreenNewState extends ConsumerState<TransferScreenNew>
       (TransactionSummary?, String?) record;
       if (amount == _selectedAssetBalance) {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .sendAll(destination: address, asset: _selectedAsset!);
       } else {
         record = await ref
-            .read(walletStateProvider.notifier)
+            .read(walletCommandsProvider)
             .send(
               amount: double.parse(amount),
               destination: address,
