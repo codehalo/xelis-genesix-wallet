@@ -128,7 +128,9 @@ class RelaySessionData {
     final normalized = hex.trim().replaceAll(RegExp(r'^0x'), '');
 
     if (normalized.length % 2 != 0) {
-      throw Exception('Invalid encryption_mode.key: hex string must have even length');
+      throw Exception(
+        'Invalid encryption_mode.key: hex string must have even length',
+      );
     }
 
     final bytes = <int>[];
