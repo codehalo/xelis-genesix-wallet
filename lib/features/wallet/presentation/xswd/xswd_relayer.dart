@@ -38,7 +38,7 @@ class RelaySessionData {
     return (m is String) ? m : null;
   }
 
-  /// Base64 key string from encryption_mode.key (null/empty → null)
+  /// Hex key string from encryption_mode.key (null/empty → null)
   String? get _keyString {
     final k = encryptionMode['key'];
     return (k is String && k.isNotEmpty) ? k : null;
