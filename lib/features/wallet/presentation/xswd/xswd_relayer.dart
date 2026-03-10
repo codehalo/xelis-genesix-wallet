@@ -2,10 +2,9 @@
 ///
 /// Expected JSON shape:
 /// {
-///   "channel_id": "abc123",
 ///   "relayer": "wss://relay.xelis.io/ws/abc123",  // full URL, ready to connect
 ///   "endpoint": "wss://relay.xelis.io",           // base, informational
-///   "encryption_mode": { "mode": "aes", "key": "<base64 32 bytes>" },
+///   "encryption_mode": { "mode": "aes", "key": "<hex 32 bytes>" },
 ///   "app_data": { ... }
 /// }
 library xswd_relayer;
@@ -16,14 +15,12 @@ import 'dart:typed_data' show Uint8List;
 import 'package:genesix/src/generated/rust_bridge/api/models/xswd_dtos.dart';
 
 class RelaySessionData {
-  final String channelId;
   final String relayer;
   final String? endpoint;
   final Map<String, dynamic> encryptionMode;
   final Map<String, dynamic>? appData;
 
   const RelaySessionData({
-    required this.channelId,
     required this.relayer,
     this.endpoint,
     required this.encryptionMode,
@@ -47,17 +44,11 @@ class RelaySessionData {
   // -------------------------------------------------------------
 
   factory RelaySessionData.fromJson(Map<String, dynamic> json) {
-    final channelId = json['channel_id'];
     final relayer = json['relayer'];
     final endpoint = json['endpoint'];
     final encryptionMode = json['encryption_mode'];
     final appData = json['app_data'];
 
-    if (channelId is! String) {
-      throw const FormatException(
-        'RelaySessionData: channel_id must be a string',
-      );
-    }
     if (relayer is! String) {
       throw const FormatException('RelaySessionData: relayer must be a string');
     }
@@ -78,7 +69,6 @@ class RelaySessionData {
     }
 
     return RelaySessionData(
-      channelId: channelId,
       relayer: relayer,
       endpoint: endpoint as String?,
       encryptionMode: encryptionMode,
@@ -87,7 +77,6 @@ class RelaySessionData {
   }
 
   Map<String, dynamic> toJson() => {
-    'channel_id': channelId,
     'relayer': relayer,
     if (endpoint != null) 'endpoint': endpoint,
     'encryption_mode': encryptionMode,
@@ -95,13 +84,11 @@ class RelaySessionData {
   };
 
   bool get isValid =>
-      channelId.trim().isNotEmpty &&
       relayer.trim().isNotEmpty &&
       (_modeString?.trim().isNotEmpty ?? false) &&
       appData != null;
 
   String? validateReason() {
-    if (channelId.trim().isEmpty) return 'Missing channel_id';
     if (relayer.trim().isEmpty) return 'Missing relayer';
     final mode = _modeString;
     if (mode == null || mode.trim().isEmpty) {
